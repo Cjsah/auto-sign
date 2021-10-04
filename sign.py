@@ -13,7 +13,6 @@ def getYmlConfig(file='config.yml'):
 
 # 全局配置
 config = getYmlConfig()
-# noinspection HttpUrlsUsage
 host = getenv('CONFIG_HOST')
 
 
@@ -66,7 +65,6 @@ def getUnSignedTasks(session):
 
     if len(res.json()['datas']['unSignedTasks']) < 1:
         raise Exception('当前没有未签到任务')
-    # log(res.json())
     latestTask = res.json()['datas']['unSignedTasks'][0]
     return {
         'signInstanceWid': latestTask['signInstanceWid'],
@@ -138,16 +136,12 @@ def uploadPicture(session, image):
     url = 'https://{host}/wec-counselor-sign-apps/stu/oss/getUploadPolicy'.format(host=host)
     res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps({'fileType': 1}))
     datas = res.json().get('datas')
-    # log(datas)
-    # new_api_upload
     fileName = datas.get('fileName') + '.png'
     accessKeyId = datas.get('accessid')
     xhost = datas.get('host')
     # xdir = datas.get('dir')
     xpolicy = datas.get('policy')
     signature = datas.get('signature')
-    # new_api_upload
-    # new_api_upload2
     url = xhost + '/'
     data = {
         'key': fileName,
@@ -162,8 +156,6 @@ def uploadPicture(session, image):
     res = session.post(url=url, data=data, files=data_file)
     if res.status_code == requests.codes.ok:
         return fileName
-    # new_api_upload2
-    # log(res)
     return fileName
 
 
