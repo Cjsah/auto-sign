@@ -108,7 +108,7 @@ def fillForm(task, session):
         for i in range(0, len(extraFields)):
             default = defaults[i]['default']
             extraField = extraFields[i]
-            if config['cpdaily']['check'] and default['title'] != extraField['title']:
+            if default['title'] != extraField['title']:
                 raise Exception('第%d个默认配置项错误，请检查' % (i + 1))
             extraFieldItems = extraField['extraFieldItems']
             for extraFieldItem in extraFieldItems:

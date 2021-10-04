@@ -1,6 +1,4 @@
 cpdaily:
-  #是否检查问题,true检查，false不检查
-  check: true
   #附加信息组默认选项配置，没有可留空
   defaults:
   #附加信息组默认选项配置，按顺序，可留空
