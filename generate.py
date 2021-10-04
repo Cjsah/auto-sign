@@ -7,8 +7,7 @@ config = app.config
 
 # 生成默认配置
 def generate():
-    user = config['users'][0]
-    session = app.getSession(user)
+    session = app.getSession()
     params = app.getUnSignedTasks(session)
     task = app.getDetailTask(session, params)
     extraFields = task['extraField']
