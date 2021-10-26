@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
-import json, yaml, base64, requests, uuid
+import json, yaml, base64, requests, pyaes, random, hashlib
 from pyDes import des, CBC, PAD_PKCS5
 from datetime import datetime, timedelta
 from os import getenv
@@ -12,14 +12,106 @@ def getYmlConfig(file='config.yml'):
         return dict(yaml.load(f.read(), Loader=yaml.FullLoader))
 
 
+# 生成设备id，根据用户账号生成,保证同一学号每次执行时deviceID不变，可以避免辅导员看到用新设备签到
+def GenDeviceID(username):
+    deviceId = ''
+    random.seed(username.encode('utf-8'))
+    for i in range(8):
+        num = random.randint(97, 122)
+        if (num * i + random.randint(1, 8)) % 3 == 0:
+            deviceId = deviceId + str(num % 9)
+        else:
+            deviceId = deviceId + chr(num)
+    deviceId = deviceId + 'XiaomiMI6'
+    return deviceId
+
+
 # 全局配置
-config = getYmlConfig()
-host = getenv('CONFIG_HOST')
+CONFIG = getYmlConfig()
+HOST = getenv('CONFIG_HOST')
+APP_VERSION = '9.0.12'
+DES_KEY = 'b3L26XNL'
+AES_KEY = 'ytUQ7l2ZZu8mLvJZ'
+USER_NAME = getenv('CONFIG_USERNAME')
+DEVICE_ID = GenDeviceID(USER_NAME)
 
 
 def log(value):
     bj_time = datetime.now() + timedelta(hours=8)
     print(bj_time.strftime("[%Y-%m-%d %H:%M:%S]"), value)
+
+
+# DES加密
+def DESEncrypt(s):
+    log('Extension加密中...')
+    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08"
+    k = des(DES_KEY, CBC, iv, pad=None, padmode=PAD_PKCS5)
+    encrypt_str = k.encrypt(s)
+    return base64.b64encode(encrypt_str).decode()
+
+
+# AES加密
+def AESEncrypt(s):
+    log('bodyString加密中...')
+    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08\t\x01\x02\x03\x04\x05\x06\x07"
+    encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationCBC(AES_KEY.encode('utf-8'), iv))
+    encrypted = encrypter.feed(s)
+    encrypted += encrypter.feed()
+    return base64.b64encode(encrypted).decode()
+
+
+# 获取表单md5
+def FormMd5(form):
+    tosign = {
+        "appVersion": APP_VERSION,
+        "bodyString": form['bodyString'],
+        "deviceId": form["deviceId"],
+        "lat": form["lat"],
+        "lon": form["lon"],
+        "model": form["model"],
+        "systemName": form["systemName"],
+        "systemVersion": form["systemVersion"],
+        "userId": form["userId"],
+    }
+    signStr = ""
+    for i in tosign:
+        if signStr:
+            signStr += "&"
+        signStr += "{}={}".format(i, tosign[i])
+    signStr += "&{}".format(AES_KEY)
+    return hashlib.md5(signStr.encode()).hexdigest()
+
+
+# 获取图片上传位置
+def uploadPicture(session):
+    url = 'https://{host}/wec-counselor-sign-apps/stu/oss/getUploadPolicy'.format(host=HOST)
+    res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps({'fileType': 1}))
+    datas = res.json().get('datas')
+    fileName = datas.get('fileName') + '.png'
+    accessKeyId = datas.get('accessid')
+    xhost = datas.get('host')
+    # xdir = datas.get('dir')
+    xpolicy = datas.get('policy')
+    signature = datas.get('signature')
+    url = xhost + '/'
+    data = {
+        'key': fileName,
+        'policy': xpolicy,
+        'OSSAccessKeyId': accessKeyId,
+        'success_action_status': '200',
+        'signature': signature
+    }
+    data_file = {
+        'file': ('blob', open(getenv('CONFIG_PHOTO'), 'rb'), 'image/jpg')
+    }
+    session.post(url=url, data=data, files=data_file)
+    url = 'https://{host}/wec-counselor-sign-apps/stu/sign/previewAttachment'.format(host=HOST)
+    data = {
+        'ossKey': fileName
+    }
+    res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps(data))
+    photoUrl = res.json().get('datas')
+    return photoUrl
 
 
 # 登陆并获取session
@@ -28,7 +120,7 @@ def getSession():
         'login_url': getenv('CONFIG_URL'),
         'needcaptcha_url': '',
         'captcha_url': '',
-        'username': getenv('CONFIG_USERNAME'),
+        'username': USER_NAME,
         'password': getenv('CONFIG_PASSWORD')
     }
 
@@ -61,7 +153,7 @@ def getUnSignedTasks(session):
     # 请求每日签到任务接口
     log('获取签到任务ID中...')
     res = session.post(
-        url='https://{host}/wec-counselor-sign-apps/stu/sign/getStuSignInfosInOneDay'.format(host=host),
+        url='https://{host}/wec-counselor-sign-apps/stu/sign/getStuSignInfosInOneDay'.format(host=HOST),
         headers=headers, data=json.dumps({}))
 
     if len(res.json()['datas']['unSignedTasks']) < 1:
@@ -85,7 +177,7 @@ def getDetailTask(session, params):
     }
     log('获取签到任务内容中...')
     res = session.post(
-        url='https://{host}/wec-counselor-sign-apps/stu/sign/detailSignInstance'.format(host=host),
+        url='https://{host}/wec-counselor-sign-apps/stu/sign/detailSignInstance'.format(host=HOST),
         headers=headers, data=json.dumps(params))
     data = res.json()['datas']
     return data
@@ -96,13 +188,14 @@ def fillForm(task, session):
     log('正在填充签到内容...')
     form = {}
     if task['isPhoto'] == 1:
-        fileName = uploadPicture(session, getenv('CONFIG_PHOTO'))
-        form['signPhotoUrl'] = getPictureUrl(session, fileName)
+        form['signPhotoUrl'] = uploadPicture(session)
     else:
         form['signPhotoUrl'] = ''
     if task['isNeedExtra'] == 1:
+        form['isNeedExtra'] = 1
         extraFields = task['extraField']
-        defaults = config['cpdaily']['defaults']
+
+        defaults = CONFIG['cpdaily']['defaults']
         extraFieldItemValues = []
         for i in range(0, len(extraFields)):
             default = defaults[i]['default']
@@ -120,6 +213,7 @@ def fillForm(task, session):
                                                'extraFieldItemWid': extraFieldItem['wid']}
                     extraFieldItemValues.append(extraFieldItemValue)
         form['extraFieldItems'] = extraFieldItemValues
+
     # form['signInstanceWid'] = params['signInstanceWid']
     form['signInstanceWid'] = task['signInstanceWid']
     form['longitude'] = getenv('CONFIG_LON')
@@ -129,70 +223,35 @@ def fillForm(task, session):
     form['position'] = getenv('CONFIG_ADDRESS')
     form['signVersion'] = '1.0.0'
     form['uaIsCpadaily'] = True
-    return form
-
-
-# 上传图片到阿里云oss
-def uploadPicture(session, image):
-    url = 'https://{host}/wec-counselor-sign-apps/stu/oss/getUploadPolicy'.format(host=host)
-    res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps({'fileType': 1}))
-    datas = res.json().get('datas')
-    fileName = datas.get('fileName') + '.png'
-    accessKeyId = datas.get('accessid')
-    xhost = datas.get('host')
-    # xdir = datas.get('dir')
-    xpolicy = datas.get('policy')
-    signature = datas.get('signature')
-    url = xhost + '/'
-    data = {
-        'key': fileName,
-        'policy': xpolicy,
-        'OSSAccessKeyId': accessKeyId,
-        'success_action_status': '200',
-        'signature': signature
+    realform = {
+        'appVersion': APP_VERSION,
+        'systemName': "android",
+        'bodyString': AESEncrypt(json.dumps(form)),
+        'lon': form['longitude'],
+        'calVersion': 'firstv',
+        'model': 'OPPO R11 Plus',
+        'systemVersion': '8.0',
+        'userId': USER_NAME,
+        'deviceId': DEVICE_ID,
+        'version': 'first_v2',
+        'lat': form['latitude']
     }
-    data_file = {
-        'file': ('blob', open(image, 'rb'), 'image/jpg')
-    }
-    res = session.post(url=url, data=data, files=data_file)
-    if res.status_code == requests.codes.ok:
-        return fileName
-    return fileName
-
-
-# 获取图片上传位置
-def getPictureUrl(session, fileName):
-    url = 'https://{host}/wec-counselor-sign-apps/stu/sign/previewAttachment'.format(host=host)
-    data = {
-        'ossKey': fileName
-    }
-    res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps(data))
-    photoUrl = res.json().get('datas')
-    return photoUrl
-
-
-# DES加密
-def DESEncrypt(s, key='b3L26XNL'):
-    log('Extension加密中...')
-    key = key
-    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08"
-    k = des(key, CBC, iv, pad=None, padmode=PAD_PKCS5)
-    encrypt_str = k.encrypt(s)
-    return base64.b64encode(encrypt_str).decode()
+    realform['sign'] = FormMd5(realform)
+    return realform
 
 
 # 提交签到任务
 def submitForm(session, form):
     # Cpdaily-Extension
     extension = {
-        "lon": getenv('CONFIG_LON'),
+        "lon": form['lon'],
         "model": "OPPO R11 Plus",
-        "appVersion": "8.1.14",
+        "appVersion": APP_VERSION,
         "systemVersion": "8.0",
-        "userId": getenv('CONFIG_USERNAME'),
+        "userId": USER_NAME,
         "systemName": "android",
-        "lat": getenv('CONFIG_LAT'),
-        "deviceId": str(uuid.uuid1())
+        "lat": form['lat'],
+        "deviceId": DEVICE_ID
     }
 
     headers = {
@@ -206,7 +265,7 @@ def submitForm(session, form):
     }
 
     log('正在提交签到任务...')
-    res = session.post(url='https://{host}/wec-counselor-sign-apps/stu/sign/submitSign'.format(host=host),
+    res = session.post(url='https://{host}/wec-counselor-sign-apps/stu/sign/submitSign'.format(host=HOST),
                        headers=headers, data=json.dumps(form))
     message = res.json()['message']
     if message == 'SUCCESS':
