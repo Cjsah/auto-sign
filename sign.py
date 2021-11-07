@@ -200,12 +200,11 @@ def submitForm(form):
 
 # 主函数
 def main():
-    pass
-    # getSession()
-    # params = getUnSignedTasks()
-    # task = getDetailTask(params)
-    # form = fillForm(task)
-    # submitForm(form)
+    getSession()
+    params = getUnSignedTasks()
+    task = getDetailTask(params)
+    form = fillForm(task)
+    submitForm(form)
 
 
 if __name__ == '__main__':
