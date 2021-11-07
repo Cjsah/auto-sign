@@ -1,13 +1,12 @@
-cpdaily:
-  #附加信息组默认选项配置，没有可留空
-  defaults:
-  #附加信息组默认选项配置，按顺序，可留空
-      - default:
-          title: 早晚自测体温是否正常
-          value: 正常
-  #多个额外选项配置
+defaults:
+    - default:
+        title: 早晚自测体温是否正常
+        value: 正常
+#多个额外选项配置
 #    - default:
 #        #表单项标题
 #        title: 体温
 #        #表单项默认值
 #        value: 正常
+#        #表单项其他值
+#        other: 其他

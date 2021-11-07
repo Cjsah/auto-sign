@@ -2,3 +2,8 @@ PyYAML~=6.0
 requests~=2.26.0
 pyaes~=1.6.1
 pyDes~=2.0.1
+tencentcloud_sdk_python~=3.0.65
+rsa~=4.7.2
+beautifulsoup4==4.10.0
+urllib3~=1.26.2
+login~=0.0.6
