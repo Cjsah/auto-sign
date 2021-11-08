@@ -13,8 +13,6 @@ APP_VERSION = '9.0.12'
 DEVICE_ID = GenDeviceID(USER_NAME)
 SESSION = requests.session()
 
-print(CONFIG)
-
 
 # 获取表单md5
 def FormMd5(form):
@@ -42,7 +40,6 @@ def FormMd5(form):
 def getSession():
     log('正在登陆并获取cookie...')
     cookie = Login(USER_NAME, PASSWORD, LOGIN_URL, SESSION, HOST).login()
-    print(cookie)
     SESSION.cookies = cookie
 
 
