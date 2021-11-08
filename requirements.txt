@@ -1,6 +1,5 @@
 tencentcloud_sdk_python~=3.0.65
 requests~=2.26.0
-login~=0.0.6
 beautifulsoup4~=4.10.0
 urllib3~=1.26.7
 pyaes~=1.6.1
