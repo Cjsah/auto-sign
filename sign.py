@@ -5,7 +5,6 @@ from login import Login
 from utils import *
 
 # 全局配置
-CONFIG = getYmlConfig()
 APP_VERSION = '9.0.12'
 DEVICE_ID = GenDeviceID()
 SESSION = requests.session()
