@@ -5,12 +5,6 @@ import random, json, base64, pyaes, yaml
 from datetime import datetime, timezone, timedelta
 from pyDes import des, CBC, PAD_PKCS5
 from os import getenv
-from io import BytesIO
-from tencentcloud.common import credential
-from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
-from tencentcloud.common.profile.client_profile import ClientProfile
-from tencentcloud.common.profile.http_profile import HttpProfile
-from tencentcloud.ocr.v20181119 import ocr_client, models
 
 DES_KEY = 'b3L26XNL'
 AES_KEY = 'ytUQ7l2ZZu8mLvJZ'
@@ -43,17 +37,16 @@ def getYmlConfig(file='config.yml'):
         return dict(yaml.load(f.read(), Loader=yaml.FullLoader))
 
 
-def GenDeviceID(username):
+def GenDeviceID():
     """
     生成设备id
     根据用户账号生成
     保证同一学号每次执行时 deviceID 不变
     可以避免辅导员看到用新设备签到
-    :param username: 用户名
     :return: deviceID
     """
     deviceId = ''
-    random.seed(username.encode('utf-8'))
+    random.seed(USER_NAME.encode('utf-8'))
     for i in range(8):
         num = random.randint(97, 122)
         if (num * i + random.randint(1, 8)) % 3 == 0:
@@ -127,34 +120,3 @@ def uploadPicture(session):
     res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps(data))
     photoUrl = res.json().get('datas')
     return photoUrl
-
-
-def getCodeFromImg(res, imgUrl):
-    response = res.get(imgUrl, verify=False)  # 将这个图片保存在内存
-    # 得到这个图片的base64编码
-    imgCode = str(base64.b64encode(BytesIO(response.content).read()), encoding='utf-8')
-    # print(imgCode)
-    try:
-        cred = credential.Credential(getYmlConfig()['SecretId'], getYmlConfig()['SecretKey'])
-        httpProfile = HttpProfile()
-        httpProfile.endpoint = "ocr.tencentcloudapi.com"
-        clientProfile = ClientProfile()
-        clientProfile.httpProfile = httpProfile
-        client = ocr_client.OcrClient(cred, "ap-beijing", clientProfile)
-
-        req = models.GeneralBasicOCRRequest()
-        params = {
-            "ImageBase64": imgCode
-        }
-        req.from_json_string(json.dumps(params))
-        resp = client.GeneralBasicOCR(req)
-        codeArray = json.loads(resp.to_json_string())['TextDetections']
-        code = ''
-        for item in codeArray:
-            code += item['DetectedText'].replace(' ', '')
-        if len(code) == 4:
-            return code
-        else:
-            return getCodeFromImg(res, imgUrl)
-    except TencentCloudSDKException as err:
-        raise Exception('验证码识别出现问题了' + str(err.message))

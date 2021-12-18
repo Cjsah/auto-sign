@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
-import hashlib, requests
-import re
-
-from Utils import *
+import hashlib, requests, re
 from login import Login
-
+from utils import *
 
 # 全局配置
 CONFIG = getYmlConfig()
 APP_VERSION = '9.0.12'
-DEVICE_ID = GenDeviceID(USER_NAME)
+DEVICE_ID = GenDeviceID()
 SESSION = requests.session()
 
 
@@ -39,7 +36,7 @@ def FormMd5(form):
 # 登陆并获取session
 def getSession():
     log('正在登陆并获取cookie...')
-    cookie = Login(USER_NAME, PASSWORD, LOGIN_URL, SESSION, HOST).login()
+    cookie = Login(USER_NAME, PASSWORD, LOGIN_URL, SESSION).login()
     SESSION.cookies = cookie
 
 
