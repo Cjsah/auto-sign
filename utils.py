@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
 
-import random, json, base64, pyaes
+import random, json, base64, pyaes, yaml
 from datetime import datetime, timezone, timedelta
 from pyDes import des, CBC, PAD_PKCS5
 from os import getenv
@@ -25,6 +25,16 @@ def log(value):
     utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
     asia_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
     print(asia_dt.strftime("[%Y-%m-%d %H:%M:%S]"), value)
+
+
+def getYmlConfig(file='config.yml'):
+    """
+    获取签到内容
+    :param file: 文件路径
+    :return: 签到内容dict
+    """
+    with open(file, 'r', encoding="utf-8") as f:
+        return dict(yaml.load(f.read(), Loader=yaml.FullLoader))
 
 
 def GenDeviceID():

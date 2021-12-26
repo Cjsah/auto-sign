@@ -4,3 +4,4 @@ urllib3~=1.26.7
 pyaes~=1.6.1
 pyDes~=2.0.1
 lxml==4.7.1
+PyYAML~=6.0

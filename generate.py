@@ -2,14 +2,12 @@
 import sign as app
 import yaml
 
-config = app.config
-
 
 # 生成默认配置
 def generate():
-    session = app.getSession()
-    params = app.getUnSignedTasks(session)
-    task = app.getDetailTask(session, params)
+    app.getSession()
+    params = app.getUnSignedTasks()
+    task = app.getDetailTask(params)
     extraFields = task['extraField']
     if len(extraFields) < 1:
         print('没有附加问题需要填写')

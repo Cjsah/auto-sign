@@ -5,6 +5,7 @@ from login import Login
 from utils import *
 
 # 全局配置
+CONFIG = getYmlConfig()
 APP_VERSION = '9.0.12'
 DEVICE_ID = GenDeviceID()
 SESSION = requests.session()
@@ -99,37 +100,37 @@ def fillForm(task):
         form['isNeedExtra'] = 1
         extraFields = task['extraField']
 
-        extraFieldItemValues = []
-        for i in range(0, len(extraFields)):
-            extraField = extraFields[i]
-            if re.match("[早晚]自测体温是否正常", extraField['title']) is None:
-                raise Exception('第%d个默认配置项错误，请检查' % (i + 1))
-            else:
-                extraFieldItems = extraField['extraFieldItems']
-                for extraFieldItem in extraFieldItems:
-                    if extraFieldItem['content'] == '正常':
-                        extraFieldItemValue = {'extraFieldItemValue': '正常', 'extraFieldItemWid': extraFieldItem['wid']}
-                        extraFieldItemValues.append(extraFieldItemValue)
-        form['extraFieldItems'] = extraFieldItemValues
-
-        # defaults = CONFIG['defaults']
         # extraFieldItemValues = []
         # for i in range(0, len(extraFields)):
-        #     default = defaults[i]['default']
         #     extraField = extraFields[i]
-        #     if default['title'] != extraField['title']:
+        #     if re.match("[早晚]自测体温是否正常", extraField['title']) is None:
         #         raise Exception('第%d个默认配置项错误，请检查' % (i + 1))
-        #     extraFieldItems = extraField['extraFieldItems']
-        #     for extraFieldItem in extraFieldItems:
-        #         if extraFieldItem['content'] == default['value']:
-        #             extraFieldItemValue = {'extraFieldItemValue': default['value'],
-        #                                    'extraFieldItemWid': extraFieldItem['wid']}
-        #             # 其他，额外文本
-        #             if extraFieldItem['isOtherItems'] == 1:
-        #                 extraFieldItemValue = {'extraFieldItemValue': default['other'],
-        #                                        'extraFieldItemWid': extraFieldItem['wid']}
-        #             extraFieldItemValues.append(extraFieldItemValue)
+        #     else:
+        #         extraFieldItems = extraField['extraFieldItems']
+        #         for extraFieldItem in extraFieldItems:
+        #             if extraFieldItem['content'] == '正常':
+        #                 extraFieldItemValue = {'extraFieldItemValue': '正常', 'extraFieldItemWid': extraFieldItem['wid']}
+        #                 extraFieldItemValues.append(extraFieldItemValue)
         # form['extraFieldItems'] = extraFieldItemValues
+
+        defaults = CONFIG['defaults']
+        extraFieldItemValues = []
+        for i in range(0, len(extraFields)):
+            default = defaults[i]['default']
+            extraField = extraFields[i]
+            if default['title'] != extraField['title']:
+                raise Exception('第%d个默认配置项错误，请检查' % (i + 1))
+            extraFieldItems = extraField['extraFieldItems']
+            for extraFieldItem in extraFieldItems:
+                if extraFieldItem['content'] == default['value']:
+                    extraFieldItemValue = {'extraFieldItemValue': default['value'],
+                                           'extraFieldItemWid': extraFieldItem['wid']}
+                    # 其他，额外文本
+                    if extraFieldItem['isOtherItems'] == 1:
+                        extraFieldItemValue = {'extraFieldItemValue': default['other'],
+                                               'extraFieldItemWid': extraFieldItem['wid']}
+                    extraFieldItemValues.append(extraFieldItemValue)
+        form['extraFieldItems'] = extraFieldItemValues
 
     # form['signInstanceWid'] = params['signInstanceWid']
     form['signInstanceWid'] = task['signInstanceWid']
