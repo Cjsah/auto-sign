@@ -7,7 +7,7 @@
 ##########################
 
 import json, yaml, uuid
-from sign import getSession, getenv, DESEncrypt
+from sign import getCookie, getenv, DESEncrypt
 
 
 # 读取yml配置
@@ -107,7 +107,7 @@ def submitForm(session, form):
 
 # 主函数
 def main():
-    session = getSession()
+    session = getCookie()
     params = getUnSignedTasks(session)
     form = fillForm(params)
     submitForm(session, form)

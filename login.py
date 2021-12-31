@@ -10,12 +10,25 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class Login:
     def __init__(self, username, password, login_url, session):
+        """
+        初始化登陆信息
+
+        :param username: 用户名
+        :param password: 密码
+        :param login_url: 登陆网址
+        :param session: session
+        """
         self.username = username
         self.password = password
         self.url = login_url
         self.session = session
 
     def login(self):
+        """
+        登陆
+
+        :return: cookie
+        """
         res = self.session.get(url=self.url)  # 获取cookie和表单
         soup = BeautifulSoup(res.text, 'lxml')
         form = soup.select('#casLoginForm')

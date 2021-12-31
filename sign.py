@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
-import hashlib, requests, re
+import hashlib, requests
 from login import Login
 from utils import *
 
@@ -11,8 +11,13 @@ DEVICE_ID = GenDeviceID()
 SESSION = requests.session()
 
 
-# 获取表单md5
 def FormMd5(form):
+    """
+    表单md5
+
+    :param form: 表单
+    :return: 填充结果
+    """
     tosign = {
         "appVersion": APP_VERSION,
         "bodyString": form['bodyString'],
@@ -33,15 +38,21 @@ def FormMd5(form):
     return hashlib.md5(signStr.encode()).hexdigest()
 
 
-# 登陆并获取session
-def getSession():
+def getCookie():
+    """
+    登陆并获取cookie
+    """
     log('正在登陆并获取cookie...')
     cookie = Login(USER_NAME, PASSWORD, LOGIN_URL, SESSION).login()
     SESSION.cookies = cookie
 
 
-# 获取最新未签到任务
 def getUnSignedTasks():
+    """
+    获取最新未签到任务
+
+    :return: 签到wid
+    """
     headers = {
         'Accept': 'application/json, text/plain, */*',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
@@ -70,8 +81,13 @@ def getUnSignedTasks():
     }
 
 
-# 获取签到任务详情
 def getDetailTask(params):
+    """
+    获取签到任务详情
+
+    :param params: 签到任务wid
+    :return: 签到内容列表
+    """
     headers = {
         'Accept': 'application/json, text/plain, */*',
         'User-Agent': 'Mozilla/5.0 (Linux; Android 10; EBG-AN00 Build/HUAWEIEBG-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Mobile Safari/537.36  cpdaily/8.2.20 wisedu/8.2.20',
@@ -88,8 +104,13 @@ def getDetailTask(params):
     return data
 
 
-# 填充表单
 def fillForm(task):
+    """
+    填充签到内容
+
+    :param task: 签到内容列表
+    :return: 签到表单
+    """
     log('正在填充签到内容...')
     form = {}
     if task['isPhoto'] == 1:
@@ -160,6 +181,11 @@ def fillForm(task):
 
 # 提交签到任务
 def submitForm(form):
+    """
+    提交签到任务
+
+    :param form: 签到表单
+    """
     # Cpdaily-Extension
     extension = {
         "lon": form['lon'],
@@ -192,9 +218,11 @@ def submitForm(form):
         raise Exception('签到失败，原因是：' + message)
 
 
-# 主函数
 def main():
-    getSession()
+    """
+    主函数
+    """
+    getCookie()
     params = getUnSignedTasks()
     task = getDetailTask(params)
     form = fillForm(task)

@@ -5,7 +5,7 @@ import yaml
 
 # 生成默认配置
 def generate():
-    app.getSession()
+    app.getCookie()
     params = app.getUnSignedTasks()
     task = app.getDetailTask(params)
     extraFields = task['extraField']

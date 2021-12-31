@@ -20,6 +20,7 @@ LAT = getenv('CONFIG_LAT')
 def log(value):
     """
     输出日志
+
     :param value: 输出内容
     """
     utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -30,6 +31,7 @@ def log(value):
 def getYmlConfig(file='config.yml'):
     """
     获取签到内容
+
     :param file: 文件路径
     :return: 签到内容dict
     """
@@ -43,6 +45,7 @@ def GenDeviceID():
     根据用户账号生成
     保证同一学号每次执行时 deviceID 不变
     可以避免辅导员看到用新设备签到
+
     :return: deviceID
     """
     deviceId = ''
@@ -60,6 +63,7 @@ def GenDeviceID():
 def DESEncrypt(s, salt=DES_KEY):
     """
     DES 加密
+
     :param s: 加密内容
     :param salt: 秘钥
     :return: 解密结果
@@ -74,6 +78,7 @@ def DESEncrypt(s, salt=DES_KEY):
 def AESEncrypt(s, salt=AES_KEY):
     """
     AES 加密
+
     :param s: 加密内容
     :param salt: 秘钥
     :return: 加密结果
@@ -89,6 +94,7 @@ def AESEncrypt(s, salt=AES_KEY):
 def uploadPicture(session):
     """
     上传图片并返回图片地址
+
     :param session:
     :return: url地址
     """
