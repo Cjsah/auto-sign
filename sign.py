@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
 import hashlib, requests
+from json import JSONDecodeError
+
 from login import Login
 from utils import *
 
@@ -68,17 +70,23 @@ def getUnSignedTasks():
         headers=headers, data=json.dumps({}), verify=False)
 
     # 获取具体签到任务
-    res = SESSION.post(
-        url='https://{host}/wec-counselor-sign-apps/stu/sign/getStuSignInfosInOneDay'.format(host=HOST),
-        headers=headers, data=json.dumps({}), verify=False)
-
-    if len(res.json()['datas']['unSignedTasks']) < 1:
-        raise Exception('当前没有未签到任务')
-    latestTask = res.json()['datas']['unSignedTasks'][0]
-    return {
-        'signInstanceWid': latestTask['signInstanceWid'],
-        'signWid': latestTask['signWid']
-    }
+    count = 3
+    for i in range(count):
+        res = SESSION.post(
+            url='https://{host}/wec-counselor-sign-apps/stu/sign/getStuSignInfosInOneDay'.format(host=HOST),
+            headers=headers, data=json.dumps({}), verify=False)
+        try:
+            tasks = res.json()['datas']['unSignedTasks']
+            if len(tasks) < 1:
+                raise Exception('当前没有未签到任务')
+            return {
+                'signInstanceWid': tasks[0]['signInstanceWid'],
+                'signWid': tasks[0]['signWid']
+            }
+        except JSONDecodeError:
+            if i == count - 1:
+                raise Exception('获取签到任务失败')
+            continue
 
 
 def getDetailTask(params):
