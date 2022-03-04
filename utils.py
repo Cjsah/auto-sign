@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
 
-import random, json, base64, pyaes
+import random, json, base64, pyaes, smtplib
 from datetime import datetime, timezone, timedelta
 from pyDes import des, CBC, PAD_PKCS5
+from email.mime.text import MIMEText
 from os import getenv
 
 DES_KEY = 'b3L26XNL'
@@ -15,6 +16,10 @@ ADDRESS = getenv('CONFIG_ADDRESS')
 LOGIN_URL = getenv('CONFIG_URL')
 LON = getenv('CONFIG_LON')
 LAT = getenv('CONFIG_LAT')
+MAIL_HOST = getenv('MAIL_HOST')
+MAIL_USER = getenv('MAIL_USER')
+MAIL_PASS = getenv('MAIL_PASS')
+MAIL_RECEIVER = getenv('MAIL_RECEIVER')
 
 
 def log(value):
@@ -115,3 +120,19 @@ def uploadPicture(session):
     res = session.post(url=url, headers={'content-type': 'application/json'}, data=json.dumps(data))
     photoUrl = res.json().get('datas')
     return photoUrl
+
+
+def sendEmail(message):
+    message = MIMEText(message, 'plain', 'utf-8')
+    message['Subject'] = '签到失败通知'
+    message['From'] = MAIL_USER
+    message['To'] = MAIL_RECEIVER
+    log('正在连接邮件服务器...')
+    smtpObj = smtplib.SMTP_SSL(MAIL_HOST)
+    smtpObj.connect(MAIL_HOST, smtplib.SMTP_SSL_PORT)
+    log('正在登陆邮件服务器...')
+    smtpObj.login(MAIL_USER, MAIL_PASS)
+    log('正在发送邮件...')
+    smtpObj.sendmail(MAIL_USER, MAIL_RECEIVER, message.as_string())
+    smtpObj.quit()
+    log('发送成功')

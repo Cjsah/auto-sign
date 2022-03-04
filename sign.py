@@ -210,11 +210,17 @@ def main():
     """
     主函数
     """
-    getCookie()
-    params = getUnSignedTasks()
-    task = getDetailTask(params)
-    form = fillForm(task)
-    submitForm(task, form)
+    try:
+        getCookie()
+        params = getUnSignedTasks()
+        task = getDetailTask(params)
+        form = fillForm(task)
+        submitForm(task, form)
+    except Exception as e:
+        errMsg = e.__str__()
+        log(errMsg)
+        log('正在发送提醒邮件...')
+        sendEmail(errMsg)
 
 
 if __name__ == '__main__':
