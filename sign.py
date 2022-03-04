@@ -107,8 +107,7 @@ def getDetailTask(params):
     res = SESSION.post(
         url='https://{host}/wec-counselor-sign-apps/stu/sign/detailSignInstance'.format(host=HOST),
         headers=headers, data=json.dumps(params))
-    data = res.json()['datas']
-    return data
+    return res.json()['datas']
 
 
 def fillForm(task):
@@ -168,10 +167,11 @@ def fillForm(task):
 
 
 # 提交签到任务
-def submitForm(form):
+def submitForm(task, form):
     """
     提交签到任务
 
+    :param task: 签到信息
     :param form: 签到表单
     """
     # Cpdaily-Extension
@@ -203,7 +203,7 @@ def submitForm(form):
     if message == 'SUCCESS':
         log('签到成功')
     else:
-        raise Exception('签到失败，原因是：' + message)
+        raise Exception(task['taskName'] + ' 签到失败，原因是：' + message)
 
 
 def main():
@@ -214,7 +214,7 @@ def main():
     params = getUnSignedTasks()
     task = getDetailTask(params)
     form = fillForm(task)
-    submitForm(form)
+    submitForm(task, form)
 
 
 if __name__ == '__main__':
