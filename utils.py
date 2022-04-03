@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 # by Cjsah
 
-import random, json, base64, pyaes, smtplib
-from datetime import datetime, timezone, timedelta
+import random, json, base64, pyaes, smtplib, yaml
 from pyDes import des, CBC, PAD_PKCS5
 from email.mime.text import MIMEText
+from logger import log
 from os import getenv
 
 DES_KEY = 'b3L26XNL'
-AES_KEY = 'ytUQ7l2ZZu8mLvJZ'
+AES_KEY = 'SASEoK4Pa5d4SssO'
+PHONE = 'EBG-AN00'
+PHONE_VERSION = '10'
 HOST = getenv('CONFIG_HOST')
 USER_NAME = getenv('CONFIG_USERNAME')
 PASSWORD = getenv('CONFIG_PASSWORD')
@@ -22,23 +24,12 @@ MAIL_PASS = getenv('MAIL_PASS')
 MAIL_RECEIVER = getenv('MAIL_RECEIVER')
 
 
-def log(value):
-    """
-    输出日志
-
-    :param value: 输出内容
-    """
-    utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
-    asia_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
-    print(asia_dt.strftime("[%Y-%m-%d %H:%M:%S]"), value)
-
-
 def GenDeviceID():
     """
     生成设备id
     根据用户账号生成
     保证同一学号每次执行时 deviceID 不变
-    可以避免辅导员看到用新设备签到
+    可以避免辅导员看到用新设备
 
     :return: deviceID
     """
@@ -50,8 +41,24 @@ def GenDeviceID():
             deviceId = deviceId + str(num % 9)
         else:
             deviceId = deviceId + chr(num)
-    deviceId = deviceId + 'OPPO R11 Plus'
+    deviceId = deviceId + PHONE
     return deviceId
+
+
+def getYmlConfig(type, file='config.yml'):
+    """
+    获取配置文件
+
+    :param type: 获取类型
+    :param file: 文件路径
+    :return: 配置内容 <dict>
+    """
+    with open(file, 'r', encoding="utf-8") as f:
+        configs = dict(yaml.load(f.read(), Loader=yaml.FullLoader))
+        config = {}
+        for kv in configs[type]:
+            config[kv['title']] = kv['value']
+        return config
 
 
 def DESEncrypt(s, salt=DES_KEY):
@@ -78,7 +85,7 @@ def AESEncrypt(s, salt=AES_KEY):
     :return: 加密结果
     """
     log('bodyString加密中...')
-    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08\t\x01\x02\x03\x04\x05\x06\x07"
+    iv = b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x01\x02\x03\x04\x05\x06\x07"
     encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationCBC(salt.encode('utf-8'), iv))
     encrypted = encrypter.feed(s)
     encrypted += encrypter.feed()
@@ -122,9 +129,9 @@ def uploadPicture(session):
     return photoUrl
 
 
-def sendEmail(message):
+def sendEmail(message, type):
     message = MIMEText(message, 'plain', 'utf-8')
-    message['Subject'] = '签到失败通知'
+    message['Subject'] = type + '失败通知'
     message['From'] = MAIL_USER
     message['To'] = MAIL_RECEIVER
     log('正在连接邮件服务器...')

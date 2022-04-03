@@ -7,9 +7,18 @@ from login import Login
 from utils import *
 
 # 全局配置
-APP_VERSION = '9.0.12'
+__name__ = '签到'
+APP_VERSION = '9.0.20'
 DEVICE_ID = GenDeviceID()
 SESSION = requests.session()
+HEADERS = {
+    'Accept': 'application/json, text/plain, */*',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; EBG-AN00 Build/HUAWEIEBG-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Mobile Safari/537.36  cpdaily/9.0.20 wisedu/9.0.20',
+    'content-type': 'application/json',
+    'Accept-Encoding': 'gzip,deflate',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Content-Type': 'application/json;charset=UTF-8'
+}
 
 
 def FormMd5(form):
@@ -54,26 +63,18 @@ def getUnSignedTasks():
 
     :return: 签到wid
     """
-    headers = {
-        'Accept': 'application/json, text/plain, */*',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
-        'content-type': 'application/json',
-        'Accept-Encoding': 'gzip,deflate',
-        'Accept-Language': 'zh-CN,en-US;q=0.8',
-        'Content-Type': 'application/json;charset=UTF-8'
-    }
     log('获取签到任务ID中...')
     # 由于是cas登陆 第一次请求接口获取cookies
     SESSION.post(
         url='https://{host}/wec-counselor-sign-apps/stu/sign/getStuSignInfosInOneDay'.format(host=HOST),
-        headers=headers, data=json.dumps({}), verify=False)
+        headers=HEADERS, data=json.dumps({}), verify=False)
 
     # 获取具体签到任务
     count = 3
     for i in range(count):
         res = SESSION.post(
             url='https://{host}/wec-counselor-sign-apps/stu/sign/getStuSignInfosInOneDay'.format(host=HOST),
-            headers=headers, data=json.dumps({}), verify=False)
+            headers=HEADERS, data=json.dumps({}), verify=False)
         try:
             tasks = res.json()['datas']['unSignedTasks']
             if len(tasks) < 1:
@@ -95,18 +96,10 @@ def getDetailTask(params):
     :param params: 签到任务wid
     :return: 签到内容列表
     """
-    headers = {
-        'Accept': 'application/json, text/plain, */*',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; EBG-AN00 Build/HUAWEIEBG-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Mobile Safari/537.36  cpdaily/8.2.20 wisedu/8.2.20',
-        'content-type': 'application/json',
-        'Accept-Encoding': 'gzip,deflate',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Content-Type': 'application/json;charset=UTF-8'
-    }
     log('获取签到任务内容中...')
     res = SESSION.post(
         url='https://{host}/wec-counselor-sign-apps/stu/sign/detailSignInstance'.format(host=HOST),
-        headers=headers, data=json.dumps(params))
+        headers=HEADERS, data=json.dumps(params))
     return res.json()['datas']
 
 
@@ -155,8 +148,8 @@ def fillForm(task):
         'bodyString': AESEncrypt(json.dumps(form)),
         'lon': form['longitude'],
         'calVersion': 'firstv',
-        'model': 'OPPO R11 Plus',
-        'systemVersion': '8.0',
+        'model': PHONE,
+        'systemVersion': PHONE_VERSION,
         'userId': USER_NAME,
         'deviceId': DEVICE_ID,
         'version': 'first_v2',
@@ -177,9 +170,9 @@ def submitForm(task, form):
     # Cpdaily-Extension
     extension = {
         "lon": form['lon'],
-        "model": "OPPO R11 Plus",
+        "model": PHONE,
         "appVersion": APP_VERSION,
-        "systemVersion": "8.0",
+        "systemVersion": PHONE_VERSION,
         "userId": USER_NAME,
         "systemName": "android",
         "lat": form['lat'],
@@ -206,9 +199,9 @@ def submitForm(task, form):
         raise Exception(task['taskName'] + ' 签到失败，原因是：' + message)
 
 
-def main():
+def run():
     """
-    主函数
+    运行函数
     """
     try:
         getCookie()
@@ -220,8 +213,8 @@ def main():
         errMsg = e.__str__()
         log(errMsg)
         log('正在发送提醒邮件...')
-        sendEmail(errMsg)
+        sendEmail(errMsg, '签到')
 
 
 if __name__ == '__main__':
-    main()
+    run()
