@@ -1,0 +1,46 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Depart
+
+on: [push, pull_request]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: [ daily, holiday ]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Set git user
+      run: |
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+    - name: Refresh branch
+      run: |
+        if git rev-parse --verify ${{ matrix.branch }}; then
+          git branch -d ${{ matrix.branch }};
+        fi
+        git checkout -b ${{ matrix.branch }}
+    - name: Depart Packge
+      run: python depart.py ${{ matrix.branch }}
+    - name: Remove depart.py
+      run: rm -f depart.py
+    - name: Commit file
+      run: git commit -am "${{ matrix.branch }} action"
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ matrix.branch }}
+        force: true

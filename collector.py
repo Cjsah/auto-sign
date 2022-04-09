@@ -14,10 +14,9 @@ CONFIG = getYmlConfig('collector')
 SESSION = requests.session()
 HEADERS = {
     'Accept': 'application/json, text/plain, */*',
-    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; EBG-AN00 Build/HUAWEIEBG-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.108 Mobile Safari/537.36  cpdaily/9.0.20 wisedu/9.0.20',
-    'content-type': 'application/json',
     'Accept-Encoding': 'gzip,deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
     'Content-Type': 'application/json;charset=UTF-8'
 }
 
@@ -46,14 +45,14 @@ def getUnfilledCollector():
     # 由于是cas登陆 第一次请求接口获取cookies
     SESSION.post(
         url='https://{host}/wec-counselor-collector-apps/stu/collector/queryCollectorProcessingList'.format(host=HOST),
-        headers=HEADERS, data=data, verify=False)
+        headers=HEADERS, data=json.dumps({}), verify=False)
 
     # 获取具体收集任务
     count = 3
     for i in range(count):
         res = SESSION.post(
             url='https://{host}/wec-counselor-collector-apps/stu/collector/queryCollectorProcessingList'.format(host=HOST),
-            headers=HEADERS, data=data, verify=False)
+            headers=HEADERS, data=json.dumps({}), verify=False)
         try:
             tasks = res.json()['datas']['rows']
             if len(tasks) < 1:
@@ -113,9 +112,17 @@ def fillForm(params, collectors):
     :return: 填充后表单 <dict>
     """
     log('正在填充表单...')
-    form = {}
-    forms = []
 
+    params['collectWid'] = params.pop('collectorWid')
+    form = {
+        'address': ADDRESS,
+        'uaIsCpadaily': True,
+        'longitude': LON,
+        'latitude': LAT
+    }
+    form.update(params)
+
+    forms = []
     logic = []
     for param in collectors:
         param['formType'] = '0'
@@ -146,13 +153,7 @@ def fillForm(params, collectors):
 
         forms.append(param)
 
-    form['address'] = ADDRESS
-    form['collectWid'] = params['collectorWid']
-    form['instanceWid'] = params['instanceWid']
-    form['schoolTaskWid'] = params['schoolTaskWid']
-    form['uaIsCpadaily'] = True
-    form['longitude'] = LON
-    form['latitude'] = LAT
+    form['form'] = forms
 
     realform = {
         'appVersion': APP_VERSION,
@@ -222,7 +223,7 @@ def run():
         submitForm(collectors, form)
     except Exception as e:
         errMsg = e.__str__()
-        log(errMsg)
+        log('出现错误: ' + errMsg)
         log('正在发送提醒邮件...')
         sendEmail(errMsg, __name__)
 
