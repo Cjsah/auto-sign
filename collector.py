@@ -36,11 +36,6 @@ def getUnfilledCollector():
 
     :return: 收集任务wid <dict>
     """
-    data = json.dumps({
-        "pageNumber": 1,
-        "pageSize": 20
-    })
-
     log('获取收集任务ID中...')
     # 由于是cas登陆 第一次请求接口获取cookies
     SESSION.post(
@@ -57,15 +52,18 @@ def getUnfilledCollector():
             tasks = res.json()['datas']['rows']
             if len(tasks) < 1:
                 raise Exception('当前没有未填表单')
-            return {
-                'collectorWid': tasks[0]['wid'],
-                'instanceWid': tasks[0]['instanceWid'],
-                'formWid': tasks[0]['formWid']
-            }
+            for task in tasks:
+                if task['subject'] == '每日疫情防控健康打卡':
+                    return {
+                        'collectorWid': task['wid'],
+                        'instanceWid': task['instanceWid'],
+                        'formWid': task['formWid']
+                    }
         except JSONDecodeError:
             if i == count - 1:
                 raise Exception('获取收集任务失败')
             continue
+        raise Exception('当前没有未填表单')
 
 
 def getSchoolWid(params):
