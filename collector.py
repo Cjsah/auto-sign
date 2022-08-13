@@ -53,7 +53,7 @@ def getUnfilledCollector():
             if len(tasks) < 1:
                 raise Exception('当前没有未填表单')
             for task in tasks:
-                if task['subject'] == '每日疫情防控健康打卡':
+                if task['subject'] == CONFIG['name']:
                     return {
                         'collectorWid': task['wid'],
                         'instanceWid': task['instanceWid'],

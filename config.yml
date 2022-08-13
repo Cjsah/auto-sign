@@ -10,19 +10,23 @@ sign:
   - title: 隔离情况
     value: 未隔离
 collector:
-  - title: 在校状态
-    value: 不在校
-  - title: 不在校原因
-    value: 其他
-  - title: 不在校学生体温状况
-    value: 正常
-  - title: 不在校学生隔离情况
-    value: 未隔离
-  - title: 14天内是否有中高风险地区旅居史
-    value: 否
-  - title: 14天内是否有中高风险地区所在区（县）旅居史
-    value: 否
-  - title: 14天内是否有涉疫城市旅居史
-    value: 否
-  - title: 不在校学生安全承诺
-    value: 本人承诺遵守学校及属地防疫规定，并做到未经审批不私自返校，如有特殊情况主动向辅导员老师报备
+  name: 黑龙江大学学生疫情防控每日健康打卡
+  content:
+    - title: 当前状态
+      value: 不在校
+    - title: 能否按时返校
+      value: 能够按照学校规定日期返校
+    - title: 预计返校日期
+      value: 8月27日
+    - title: 不在校学生体温状况
+      value: 正常
+    - title: 不在校学生隔离情况
+      value: 未隔离
+    - title: 7天内是否有中高风险地区旅居史
+      value: 否
+    - title: 7天内是否有中高风险地区所在区（县）旅居史
+      value: 否
+    - title: 7天内是否有涉疫城市旅居史
+      value: 否
+    - title: 不在校学生安全承诺
+      value: 本人承诺遵守学校及属地防疫规定，并做到未经审批不私自返校，如有特殊情况主动向辅导员老师报备

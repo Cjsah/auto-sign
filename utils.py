@@ -55,8 +55,8 @@ def getYmlConfig(type, file='config.yml'):
     """
     with open(file, 'r', encoding="utf-8") as f:
         configs = dict(yaml.load(f.read(), Loader=yaml.FullLoader))
-        config = {}
-        for kv in configs[type]:
+        config = {'name': configs[type]['name']}
+        for kv in configs[type]['content']:
             config[kv['title']] = kv['value']
         return config
 
