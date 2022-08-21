@@ -10,7 +10,7 @@ sign:
   - title: 隔离情况
     value: 未隔离
 collector:
-  name: 黑龙江大学学生疫情防控每日健康打卡
+  name: 黑龙江大学学生疫情防控每日健康打卡（在校生）
   content:
     - title: 当前状态
       value: 不在校

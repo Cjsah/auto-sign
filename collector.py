@@ -63,7 +63,7 @@ def getUnfilledCollector():
             if i == count - 1:
                 raise Exception('获取收集任务失败')
             continue
-        raise Exception('当前没有未填表单')
+        raise Exception(str([i['subject'] for i in tasks]) + ' 中未找到此收集任务: ' + CONFIG['name'])
 
 
 def getSchoolWid(params):
