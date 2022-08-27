@@ -143,7 +143,7 @@ def fillForm(params, collectors):
                         for logic_str in item['showLogic'].split(','):
                             logic.append(int(logic_str))
             if not selected:
-                raise Exception("未找到名为 '{}' 的选项, 请检查".format(value))
+                raise Exception("{} 中未找到名为 '{}' 的选项, 请检查".format([p['content'] for p in param['fieldItems']], value))
         param['fieldItems'].clear()
         if selected:
             param['fieldItems'].append(content)
