@@ -119,7 +119,6 @@ def fillForm(task):
     if task['isNeedExtra'] == 1:
         form['isNeedExtra'] = 1
         extraFields = task['extraField']
-# # # # # <- daily -> # # # # #
         extraFieldItemValues = []
         for i in range(0, len(extraFields)):
             extraField = extraFields[i]
@@ -132,27 +131,6 @@ def fillForm(task):
                         extraFieldItemValue = {'extraFieldItemValue': '正常', 'extraFieldItemWid': extraFieldItem['wid']}
                         extraFieldItemValues.append(extraFieldItemValue)
         form['extraFieldItems'] = extraFieldItemValues
-# # # # # <- end -> # # # # #
-# # # # # <- holiday -> # # # # #
-        configs = getYmlConfig("sign")
-        extraFieldItemValues = []
-        for i in range(0, len(extraFields)):
-            config = configs[i]
-            extraField = extraFields[i]
-            if config['title'] != extraField['title']:
-                raise Exception('第%d个默认配置项错误，请检查' % (i + 1))
-            extraFieldItems = extraField['extraFieldItems']
-            for extraFieldItem in extraFieldItems:
-                if extraFieldItem['content'] == config['value']:
-                    extraFieldItemValue = {'extraFieldItemValue': config['value'],
-                                           'extraFieldItemWid': extraFieldItem['wid']}
-                    # 其他，额外文本
-                    if extraFieldItem['isOtherItems'] == 1:
-                        extraFieldItemValue = {'extraFieldItemValue': config['other'],
-                                               'extraFieldItemWid': extraFieldItem['wid']}
-                    extraFieldItemValues.append(extraFieldItemValue)
-        form['extraFieldItems'] = extraFieldItemValues
-# # # # # <- end -> # # # # #
     form['signInstanceWid'] = task['signInstanceWid']
     form['longitude'] = LON
     form['latitude'] = LAT
