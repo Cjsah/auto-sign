@@ -119,21 +119,6 @@ def fillForm(task):
     if task['isNeedExtra'] == 1:
         form['isNeedExtra'] = 1
         extraFields = task['extraField']
-# # # # # <- daily -> # # # # #
-        extraFieldItemValues = []
-        for i in range(0, len(extraFields)):
-            extraField = extraFields[i]
-            if re.match("[早晚]自测体温是否正常", extraField['title']) is None:
-                raise Exception('第%d个默认配置项错误，请检查' % (i + 1))
-            else:
-                extraFieldItems = extraField['extraFieldItems']
-                for extraFieldItem in extraFieldItems:
-                    if extraFieldItem['content'] == '正常':
-                        extraFieldItemValue = {'extraFieldItemValue': '正常', 'extraFieldItemWid': extraFieldItem['wid']}
-                        extraFieldItemValues.append(extraFieldItemValue)
-        form['extraFieldItems'] = extraFieldItemValues
-# # # # # <- end -> # # # # #
-# # # # # <- holiday -> # # # # #
         configs = getYmlConfig("sign")
         extraFieldItemValues = []
         for i in range(0, len(extraFields)):
@@ -152,7 +137,6 @@ def fillForm(task):
                                                'extraFieldItemWid': extraFieldItem['wid']}
                     extraFieldItemValues.append(extraFieldItemValue)
         form['extraFieldItems'] = extraFieldItemValues
-# # # # # <- end -> # # # # #
     form['signInstanceWid'] = task['signInstanceWid']
     form['longitude'] = LON
     form['latitude'] = LAT
